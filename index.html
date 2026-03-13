@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watermark</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0c0c0c;--s:#141414;--b:#222;--bh:#383838;--a:#c8ff00;--t:#ddd;--d:#555;--m:#777;--r:#ff5f5f}
+body{background:var(--bg);color:var(--t);font-family:'IBM Plex Mono',monospace;min-height:100vh;padding:28px 20px;max-width:700px;margin:0 auto}
+header{display:flex;align-items:baseline;gap:12px;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--b)}
+h1{font-size:16px;font-weight:600;color:var(--a)}
+.sub{font-size:9px;color:var(--d);text-transform:uppercase;letter-spacing:2px}
+
+.wm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.slot{background:var(--s);border:1px solid var(--b);border-radius:4px;overflow:hidden}
+.slot-head{padding:7px 9px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--b)}
+.badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:2px}
+.by{background:rgba(200,255,0,.12);color:var(--a);border:1px solid rgba(200,255,0,.2)}
+.bp{background:rgba(100,180,255,.1);color:#7bbfff;border:1px solid rgba(100,180,255,.2)}
+.bk{background:rgba(180,140,255,.1);color:#c4aaff;border:1px solid rgba(180,140,255,.2)}
+.bd{background:rgba(255,180,80,.1);color:#ffb84d;border:1px solid rgba(255,180,80,.2)}
+.slot-desc{font-size:8px;color:var(--d)}
+.wdrop{padding:10px;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:68px;transition:background .15s}
+.wdrop input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.wdrop:hover,.wdrop.over{background:rgba(200,255,0,.03)}
+.wlbl{font-size:9px;color:var(--d);text-transform:uppercase;letter-spacing:1px}
+.wdrop img{max-width:100%;max-height:40px;display:none;border-radius:1px}
+.wfn{font-size:8px;color:var(--a);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;display:none}
+
+.vdrop{border:1px dashed var(--bh);border-radius:4px;padding:18px;text-align:center;cursor:pointer;position:relative;margin-bottom:8px;transition:all .15s}
+.vdrop input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.vdrop:hover,.vdrop.over{border-color:var(--a);background:rgba(200,255,0,.02)}
+.vdrop-txt{font-size:10px;color:var(--d)}
+.vdrop-txt b{color:var(--a);font-weight:500}
+
+#qlist{margin-bottom:14px;display:flex;flex-direction:column;gap:5px;max-height:240px;overflow-y:auto}
+.qi{background:var(--s);border:1px solid var(--b);border-radius:3px;padding:8px 11px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.qi .qn{font-size:10px;color:var(--t);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qi .qtag{font-size:8px;padding:2px 6px;border-radius:2px;background:rgba(255,255,255,.04);color:var(--d);flex-shrink:0;min-width:52px;text-align:center}
+.qi .qpct{font-size:9px;color:var(--d);flex-shrink:0;width:44px;text-align:right}
+.qi .qdel{background:none;border:none;color:var(--d);cursor:pointer;font-size:12px;padding:0 2px;flex-shrink:0}
+.qi .qdel:hover{color:var(--r)}
+.qi.active{border-color:var(--a)}
+.qi.done .qn{color:var(--m)}
+
+.btn{width:100%;padding:13px;background:var(--a);color:#000;border:none;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.btn:hover:not(:disabled){background:#fff}
+.btn:disabled{opacity:.2;cursor:not-allowed}
+.pbar{height:2px;background:var(--b);border-radius:2px;overflow:hidden;margin-bottom:8px}
+.pf{height:100%;background:var(--a);width:0%;transition:width .4s}
+.st{font-size:9px;color:var(--m);text-align:center;min-height:13px}
+</style>
+</head>
+<body>
+<header><h1>WATERMARK</h1><span class="sub">Sunucu · Otomatik Format · Toplu</span></header>
+
+<div class="wm-grid">
+  <div class="slot">
+    <div class="slot-head"><span class="badge by">Yatay</span><span class="slot-desc">16:9</span></div>
+    <div class="wdrop" id="wz-y"><input type="file" accept="image/*"><div class="wlbl">PNG seç</div><img id="wi-y"><div class="wfn" id="wfn-y"></div></div>
+  </div>
+  <div class="slot">
+    <div class="slot-head"><span class="badge bp">Portre</span><span class="slot-desc">9:16</span></div>
+    <div class="wdrop" id="wz-p"><input type="file" accept="image/*"><div class="wlbl">PNG seç</div><img id="wi-p"><div class="wfn" id="wfn-p"></div></div>
+  </div>
+  <div class="slot">
+    <div class="slot-head"><span class="badge bk">Kare</span><span class="slot-desc">1:1</span></div>
+    <div class="wdrop" id="wz-k"><input type="file" accept="image/*"><div class="wlbl">PNG seç</div><img id="wi-k"><div class="wfn" id="wfn-k"></div></div>
+  </div>
+  <div class="slot">
+    <div class="slot-head"><span class="badge bd">Dikey</span><span class="slot-desc">4:5</span></div>
+    <div class="wdrop" id="wz-d"><input type="file" accept="image/*"><div class="wlbl">PNG seç</div><img id="wi-d"><div class="wfn" id="wfn-d"></div></div>
+  </div>
+</div>
+
+<div class="vdrop" id="vzone">
+  <input type="file" id="vinput" accept="video/*" multiple>
+  <div class="vdrop-txt">🎬 &nbsp;Video sürükle veya seç &nbsp;·&nbsp; <b>Birden fazla olabilir</b></div>
+</div>
+<div id="qlist"></div>
+<div class="pbar"><div class="pf" id="pf"></div></div>
+<div class="st" id="st">Hazır.</div>
+<button class="btn" id="btnrun" disabled>Başlat — Hepsini İşle</button>
+
+<script>
+const wms = { y:null, p:null, k:null, d:null };
+const queue = [];
+let running = false, idc = 0;
+
+['y','p','k','d'].forEach(s => {
+  const z = document.getElementById('wz-' + s);
+  z.querySelector('input').addEventListener('change', e => loadWM(s, e.target.files[0]));
+  z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('over'); });
+  z.addEventListener('dragleave', () => z.classList.remove('over'));
+  z.addEventListener('drop', e => { e.preventDefault(); z.classList.remove('over'); loadWM(s, e.dataTransfer.files[0]); });
+});
+
+function loadWM(s, f) {
+  if (!f) return;
+  wms[s] = f;
+  const img = document.getElementById('wi-' + s);
+  img.src = URL.createObjectURL(f); img.style.display = 'block';
+  const fn = document.getElementById('wfn-' + s);
+  fn.textContent = f.name; fn.style.display = 'block';
+  document.getElementById('wz-' + s).querySelector('.wlbl').style.display = 'none';
+  chk();
+}
+
+const vzone = document.getElementById('vzone');
+vzone.addEventListener('dragover', e => { e.preventDefault(); vzone.classList.add('over'); });
+vzone.addEventListener('dragleave', () => vzone.classList.remove('over'));
+vzone.addEventListener('drop', e => { e.preventDefault(); vzone.classList.remove('over'); addFiles(e.dataTransfer.files); });
+document.getElementById('vinput').addEventListener('change', e => addFiles(e.target.files));
+
+function addFiles(files) {
+  for (const f of files) {
+    const id = ++idc;
+    queue.push({ f, id, st: 'wait' });
+    const el = document.createElement('div');
+    el.className = 'qi'; el.id = 'qi' + id;
+    el.innerHTML = `<span class="qn">${f.name}</span><span class="qtag" id="qt${id}">bekliyor</span><span class="qpct" id="qp${id}"></span><button class="qdel" onclick="del(${id})">✕</button>`;
+    document.getElementById('qlist').appendChild(el);
+  }
+  chk();
+}
+
+function del(id) {
+  const i = queue.findIndex(x => x.id === id);
+  if (i !== -1 && queue[i].st !== 'active') {
+    queue.splice(i, 1);
+    document.getElementById('qi' + id)?.remove();
+    chk();
+  }
+}
+
+function chk() {
+  const ok = Object.values(wms).some(Boolean) && queue.some(x => x.st === 'wait') && !running;
+  document.getElementById('btnrun').disabled = !ok;
+}
+
+function slotOf(w, h) {
+  const r = w / h;
+  if (r >= 1.6) return 'y';
+  if (r <= 0.65) return 'p';
+  if (r >= 0.9 && r <= 1.1) return 'k';
+  return 'd';
+}
+
+function bestWM(s) {
+  if (wms[s]) return wms[s];
+  const fb = { y:['y','k','d','p'], p:['p','d','k','y'], k:['k','y','p','d'], d:['d','p','k','y'] };
+  for (const x of fb[s]) if (wms[x]) return wms[x];
+}
+
+function getVideoDims(file) {
+  return new Promise((res, rej) => {
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => res({ w: v.videoWidth, h: v.videoHeight });
+    v.onerror = rej;
+    v.src = URL.createObjectURL(file);
+  });
+}
+
+async function proc(item) {
+  const tagEl = document.getElementById('qt' + item.id);
+  const pctEl = document.getElementById('qp' + item.id);
+  const qEl   = document.getElementById('qi' + item.id);
+  item.st = 'active';
+  qEl.classList.add('active');
+  tagEl.style.color = 'var(--a)';
+
+  const { w, h } = await getVideoDims(item.f);
+  const s = slotOf(w, h);
+  const wm = bestWM(s);
+  tagEl.textContent = s.toUpperCase();
+
+  // Upload progress
+  const xhr = new XMLHttpRequest();
+  const fd  = new FormData();
+  fd.append('video', item.f);
+  fd.append('watermark', wm);
+
+  await new Promise((res, rej) => {
+    xhr.open('POST', '/process');
+
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable) {
+        const pct = Math.round(e.loaded / e.total * 50); // upload = %50
+        pctEl.textContent = pct + '%';
+        const doneN = queue.filter(x => x.st === 'done').length;
+        document.getElementById('pf').style.width =
+          ((doneN + pct/100*0.5) / queue.length * 100).toFixed(1) + '%';
+      }
+    };
+
+    xhr.onprogress = e => { pctEl.textContent = '⚙'; };
+
+    xhr.onload = async () => {
+      if (xhr.status === 200) {
+        pctEl.textContent = '100%';
+        const blob = xhr.response;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'wm_' + item.f.name.replace(/\.[^.]+$/, '') + '.mp4';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        res();
+      } else {
+        rej(new Error('Sunucu hatası: ' + xhr.status));
+      }
+    };
+    xhr.onerror = () => rej(new Error('Bağlantı hatası'));
+    xhr.responseType = 'blob';
+    xhr.send(fd);
+  });
+
+  item.st = 'done';
+  qEl.classList.remove('active'); qEl.classList.add('done');
+  tagEl.style.color = 'var(--a)'; tagEl.textContent = '✓';
+  pctEl.textContent = '';
+
+  const doneN = queue.filter(x => x.st === 'done').length;
+  document.getElementById('pf').style.width = (doneN / queue.length * 100).toFixed(1) + '%';
+}
+
+document.getElementById('btnrun').onclick = async () => {
+  if (running) return;
+  running = true;
+  document.getElementById('btnrun').disabled = true;
+  const pending = queue.filter(x => x.st === 'wait');
+  for (let i = 0; i < pending.length; i++) {
+    document.getElementById('st').textContent = `${i+1} / ${pending.length} işleniyor…`;
+    try { await proc(pending[i]); }
+    catch(e) {
+      pending[i].st = 'err';
+      const t = document.getElementById('qt' + pending[i].id);
+      if (t) { t.style.color = 'var(--r)'; t.textContent = 'hata'; }
+      console.error(e);
+    }
+  }
+  document.getElementById('pf').style.width = '100%';
+  document.getElementById('st').textContent = `✓ ${pending.length} video tamamlandı.`;
+  running = false;
+  chk();
+};
+</script>
+</body>
+</html>
